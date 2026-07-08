@@ -1,0 +1,13 @@
+# GeoBIM Portfolio — Python dependencies
+# Activate conda env first, then: pip install -r requirements.txt
+
+numpy
+shapely
+matplotlib
+
+pyproj
+# Week 3+ (install as needed)
+# geopandas
+# fiona
+# rasterio
+# scipy
