@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <link rel = "stylesheet" href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css">
+        <script
+        src = "https://unpkg.com/cesium/Build/Cesium/Cesium.js"> 
+        </script>
+    </head>
+
+    <style>
+        html, body, #cesiumContainer{
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #infoPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 999;
+            min-width: 200px;
+        }
+        
+        </style>
+
+    <body>
+        <div id = "cesiumContainer"></div>
+        <div id = "infoPanel" style="display:none;">
+            <h3 id="panelName"></h3>
+            <p id="panelHeight"></p>
+            <p id="panelAttr"></p>
+        </div>
+
+         <script> 
+            Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMjg0YWE1Mi04Njg1LTQ5MjMtOWVhYS1kN2I1YTgxZjJlMDMiLCJpZCI6NDU5MjYzLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODQ3MjE1MTR9.TMLDslgi98zRbnlx6v9pYdRceKL85_5tWH3-Yf5qImY"
+            const viewer = new Cesium.Viewer("cesiumContainer");
+        
+            viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(4.368, 51.978, 150)
+}); 
+            
+           
+            
+            fetch("/api/scene/buildings")
+            .then(response => response.json())
+            .then(geojson => {
+                const promise = Cesium.GeoJsonDataSource.load(geojson);
+                promise.then(dataSource => {
+                    viewer.dataSources.add(dataSource);
+                    const entities = dataSource.entities.values;
+                    for(let i =0; i < entities.length; i++){
+                        const entity = entities[i];
+                        const height = entity.properties.height.getValue();
+                        if(height){
+                            entity.polygon.extrudedHeight = height + entity.properties.ground_z.getValue();
+                            entity.polygon.height = entity.properties.ground_z.getValue();
+                            entity.polygon.material = Cesium.Color.fromAlpha(Cesium.Color.ROYALBLUE, 0.8);
+                            entity.polygon.outline = true;
+                        }
+                    }
+                });
+            });
+            const infoPanel = document.getElementById("infoPanel")
+
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+            handler.setInputAction(function(click){
+                const picked = viewer.scene.pick(click.position);
+                if(picked && picked.id){
+                    const entity = picked.id;
+                    const buildingId = entity.properties.id.getValue();
+                    const name = entity.properties.name.getValue();
+                    const height = entity.properties.height.getValue();
+
+                    document.getElementById("panelName").textContent = name || buildingId;
+                    document.getElementById("panelHeight").textContent = "height:" + height + "m"
+                    infoPanel.style.display = "block";
+
+                    fetch("/api/buildings/" + buildingId)
+                    .then(r => r.json())
+                    .then(detail =>{
+                        document.getElementById("panelAttr").textContent = JSON.stringify(detail.attributes);
+                    });
+                }else{
+                    infoPanel.style.display = "none";
+                }
+            },Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        </script>
+
+        </body>
+</html>
