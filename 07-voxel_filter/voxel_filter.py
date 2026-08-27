@@ -23,17 +23,18 @@ with laspy.open(data_path) as f:
     bbox_zrange = np.arange(z_min, z_max, voxel_size)
 
     print (bbox_xrange)
-
+    #floor
     voxel_x = np.floor((las.x - x_min) / voxel_size).astype(int)
     voxel_y = np.floor((las.y - y_min) / voxel_size).astype(int)
     voxel_z = np.floor((las.z - z_min) / voxel_size).astype(int)
-
+    #unique
     voxel_ids= np.stack([voxel_x, voxel_y, voxel_z], axis=1)
     _, inverse = np.unique(voxel_ids, axis=0, return_inverse=True)
-
+    # inverse, add.at
     n_voxels = inverse.max() + 1
     sums = np.zeros((n_voxels, 3))
     np.add.at(sums, inverse, las.xyz)
+    #bincount
     counts = np.bincount(inverse)
     centroids = sums / counts[:, None]
 
