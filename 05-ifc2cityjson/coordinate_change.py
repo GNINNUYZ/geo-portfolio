@@ -5,7 +5,7 @@ import ifcopenshell
 import os
 
 scr_path = os.path.dirname(__file__)
-data_path = os.path.join(scr_path,'data',"Duplex.ifc")
+data_path = os.path.join(scr_path,'..','data',"Duplex.ifc")
 
 model = ifcopenshell.open(data_path)
 s = geom.settings()
@@ -18,8 +18,8 @@ def get_model(product):
     except Exception:
         return None, None
 
-
 def classify(p):
+
     t = p.is_a()
     if t in ("IfcWall","IfcWallStandardCase"):
         return "WallSurface"
@@ -37,7 +37,13 @@ def add_vertex(x, y, z):
     return index[k]
     
 boundaries, surfaces, values = [], [], []
+SKIP = {"IfcSpace", "IfcFurnishingElement","IfcRailing",
+        "IfcStairFlight","IfcOpeningElement","IfcCovering",
+        "IfcMember","IfcFooting","IfcBeam"}
+
 for p in model.by_type("IfcProduct"):
+    if p.is_a() in SKIP:
+        continue
     verts, faces =get_model(p)
     if verts is None:
         continue
@@ -77,6 +83,6 @@ g["semantics"] = {"surfaces": surfaces, "values":values}
 cityjson["vertices"] = vertices
 
 import json
-out = os.path.join(scr_path,"05-ifc2cityjson", "outputCity.json")
+out = os.path.join(scr_path, "output.city.json")
 json.dump(cityjson, open(out, "w"), indent=2)
 print("written", out)

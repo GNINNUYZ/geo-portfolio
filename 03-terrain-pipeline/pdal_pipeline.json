@@ -1,0 +1,10 @@
+{
+    "pipeline":[
+        {"type": "readers.las","filename": "data/C_37EN2.LAZ"},
+        {"type": "filters.outlier", "method": "statistical", "mean_k": 8,"multiplier":3.0 },
+        {"type": "filters.smrf", "cell":2.0, "threshold":0.5},
+        {"type": "filters.range", "limits": "Classification[2:2]"},
+        {"type": "filters.sample", "radius": 2.0},
+        {"type": "writers.las", "filename": "data/ground_filtered.laz", "extra_dims": "all"}
+    ]
+}

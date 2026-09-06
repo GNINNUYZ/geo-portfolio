@@ -1,5 +1,7 @@
 #main
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import json
 from fastapi import FastAPI, Depends, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -8,12 +10,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import text
 from pydantic import BaseModel
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://postgres:REDACTED@localhost:5432/geo_portfolio"
-)
+db_url = os.getenv("DATABASE_URL")
+if not db_url:
+    raise RuntimeError("DATABASE_URL miss, check .env")
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+engine = create_async_engine(db_url, echo=False)
 
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -114,7 +115,7 @@ async def get_components(building_id: str, db: AsyncSession = Depends(get_db)):
 async def get_hight( db : AsyncSession = Depends(get_db)):
     result = await db.execute(
         text("SELECT id, name, attributes, "
-        "ST_AsGeoJSON(ST_Transform(ST_Envelope(geom3d), 4326)) AS footprint, "
+        "ST_AsGeoJSON(ST_Transform(footprint, 4326)) AS footprint, "
         "ST_ZMax(geom3d) - ST_ZMin(geom3d) AS height, "
         "ST_ZMin(geom3d) AS ground_z " 
         "FROM buildings")

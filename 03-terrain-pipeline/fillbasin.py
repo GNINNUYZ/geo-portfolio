@@ -10,7 +10,7 @@ if not hasattr(np, 'in1d'):
 
 
 script_path = os.path.dirname(__file__)
-data_path = os.path.join(script_path,'..', 'dem.tif')
+data_path = os.path.join(script_path, 'dem.tif')
 #open 
 grid0 = Grid.from_raster(data_path)
 dem = grid0.read_raster(data_path)
@@ -25,17 +25,18 @@ watertogether = grid0.accumulation(flow_dir)
 
 #outpoint
 threshold = 50
-x0, y0 = np.unravel_index(np.nanargmax(watertogether), watertogether.shape)[::-1]
+col, row = np.unravel_index(np.nanargmax(watertogether), watertogether.shape)[::-1]
+x0, y0 = grid0.affine * (col, row)
 x_snap, y_snap = grid0.snap_to_mask(watertogether > threshold, (x0, y0))
 catch_big_streams = grid0.catchment(x=x_snap, y = y_snap, fdir=flow_dir, out_name='catchflow',xytype='coordinate')
 #tunnel
 tunnel0 = watertogether > threshold
-plt.imsave('tunnel.png', tunnel0, cmap = 'Blues')
+plt.imsave(os.path.join(script_path,'tunnel.png'), tunnel0, cmap = 'Blues')
 print('Saved tunnel.png')
 #Save
-plt.imsave('flow_dir.png', flow_dir, cmap='viridis')
+plt.imsave(os.path.join(script_path,'flow_dir.png'), flow_dir, cmap='viridis')
 print('Saved flow_dir.png')
-plt.imsave('water_together.png', watertogether, cmap='Blues')
+plt.imsave(os.path.join(script_path,'water_together.png'), watertogether, cmap='Blues')
 print('Saved water_together.png')
-plt.imsave('streams.png', catch_big_streams, cmap='Blues')
+plt.imsave(os.path.join(script_path,'streams.png'), catch_big_streams, cmap='Blues')
 print('Saved streams.png')

@@ -3,21 +3,23 @@ import os
 import geopandas as gpd
 import numpy as np
 import json
+import laspy
+from shapely.geometry import Point
 
 scr_path = os.path.dirname(__file__)
-GPKG = os.path.join(scr_path, "..", "data", "delft_center_buildings.gpkg")
-LAZ = os.path.join(scr_path, "..", "data", "small_dutch.laz")
+GPKG = os.path.join(scr_path, "delft_50.geojson")
+LAZ = os.path.join(scr_path, "delft_50_crop.laz")
 
 data0 = gpd.read_file(GPKG)
 data0 = data0.to_crs(28992)
+laz0 = laspy.read(LAZ)
 
-print(data0.iterrows)
-
+#boolean
 pointlist = []
 x_all = []
 y_all = []
 z_all = []
-
+per_building = {}
 for idx, row in data0.iterrows():
     geom = row.geometry
 
@@ -32,47 +34,51 @@ for idx, row in data0.iterrows():
             y_coords = [c[1] for c in coords]
             z_coords = []
 
+
+        px, py, pz = laz0.xyz[:,0], laz0.xyz[:,1], laz0.xyz[:,2]
+        minx, miny, maxx, maxy = geom.bounds
+        m = (px >= minx) & (py >= miny) & (px <= maxx) & (py <= maxy)
+        cx, cy, cz = px[m], py[m], pz[m]
+
+        inside = [geom.contains(Point(x, y)) for x, y in zip(cx, cy)]
+        z_inside = cz[inside]
+        if len(z_inside) == 0:
+            continue
+
         pointlist.append((x_coords, y_coords,z_coords))
+
+        ground= float(np.percentile(z_inside,10))
+        roof = float(np.percentile(z_inside,90))
+        per_building[f"b{len(per_building)}"] = (ground, roof, roof-ground)
 
 coords_clean = []
 for x_list, y_list, z_list in pointlist:
     for x, y in zip(x_list, y_list):
         if(x, y) not in coords_clean:
             coords_clean.append((x, y))
-print(len(coords_clean))
 
 coords_dict = {i:v for v, i in enumerate(coords_clean)}
-print(type(coords_dict))
+
 #查coords_dict,根据pointlist里xy查出对应的coords_dict的点序号，再放进buildings[]里 
-building = []
+building = {}
 for x_list, y_list, z_list in pointlist:
     seq = [coords_dict[(x, y)] for x, y in zip(x_list, y_list)]
-    building.append(seq)
+    building[f"b{len(building)}"] = seq[:-1]
 
-print(building[:5])
 #定义cityjson
 cityjson = {
-    "type": "CityJSON","version": "2.0",
+    "type": "CityJSON","version": "1.1",
     "transform": {"scale": [1,1,1], "translate": [0,0,0]},
-    "metadata": {"referenceSystem": "https://www.opengis.net/def/crs/EPSG/28992"},
+    "metadata": {"referenceSystem": "https://www.opengis.net/def/crs/EPSG/0/28992"},
     "vertices": [[x,y,0] for (x,y) in coords_clean],
     "CityObjects": {}
 }
-#把得到的buildinglist变成字典
-for b, seq in enumerate(building):
-    #去掉最后一位
-    ring = seq[:-1]
-    cityjson["CityObjects"][f"building_{b}"] ={
-        "type": "Building",
-        "geometry": [{"type": "Solid", "lod":"1.3",
-                     "boundaries": [[[ring]]]}]
-    }
 
-json.dump(cityjson, open("out.json", "w"))
 #生体量，vertice2d:顶点数组，buildingring：建筑id:点序号footprint环，per_building：建筑id：（地面高程，屋顶高程，_）
 def riseup(vertices_2d, building_rings, per_building):
     vertices0 = [list(v) for v in vertices_2d]
     solids = {}
+
 #建筑序号，环点序号
     for pid, ring in building_rings.items():
         #对应取出那个建筑的采样数据
@@ -111,11 +117,22 @@ def riseup(vertices_2d, building_rings, per_building):
         semantics = ["GroundSurface","RoofSurface"] + ["WallSurface"]*len(walls)
         cityjson["CityObjects"][pid] = {
             "type": "Building",
+            
+            "attributes":{
+                "ground_z": round(ground, 3),
+                "roof_z": round(roof, 3),
+                "height": round(roof-ground, 3),
+                "storeyAboveGround" : 1,
+                "yearOfConstruction":2000
+            },
+
             "geometry": [{"type":"Solid", "lod":"1.3",
                           "boundaries": boundaries,
-                          "semantics": {"surfaces":[{"type":t} for t in semantics]}}]
+                          "semantics": {"surfaces":[{"type":t} for t in semantics],
+                                        "values": [[i] for i in range(len(semantics))]}}]
         }
+    return vertices0
 
-
-
-
+vertice0 = riseup(cityjson["vertices"], building, per_building)
+cityjson["vertices"] = vertice0
+json.dump(cityjson, open(os.path.join(scr_path, "out.json"), "w"))

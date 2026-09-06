@@ -1,10 +1,11 @@
 #P1_Amsterdam_analysis
 import os
 import geopandas as gpd
+import numpy as np
 
 script_dir = os.path.dirname(__file__)
-block_dir = os.path.join(script_dir,'..','data','amsterdam_wijken_full.json')
-arch_dir = os.path.join(script_dir,'..','data','amsterdam_buildings_full.json')
+block_dir = os.path.join(script_dir,'data','amsterdam_wijken_full.json')
+arch_dir = os.path.join(script_dir,'data','amsterdam_buildings.json')
 
 #gpd.read_file
 buildings = gpd.read_file(arch_dir)
@@ -22,6 +23,7 @@ buildings = buildings[buildings.geometry.is_valid]
 buildings = buildings[buildings.geom_type.isin(["Polygon","MultiPolygon"])]
 
 print(buildings.crs)
+print(buildings['geometry'])
 #save
 buildings.to_file(os.path.join(script_dir,'..','data','buildings_clean.gpkg'), driver = "GPKG")
 

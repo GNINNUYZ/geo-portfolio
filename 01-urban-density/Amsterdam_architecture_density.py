@@ -1,12 +1,11 @@
 import os
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import fiona
 
 #建筑,街区数据导入
 script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, "data")
-building_dir = os.path.join(data_dir, "buildings_clean.gpkg")
+building_dir = os.path.join(script_dir, "..", "data", "buildings_clean.gpkg")
 block_dir = os.path.join(data_dir, "amsterdam_wijken_full.json")
 #gpd.open
 buildings = gpd.read_file(building_dir)
@@ -33,6 +32,7 @@ list2 = blocks.set_index("wijkcode")["block_area_m2"]
 result1 = blocks.copy()
 result1 = result1.fillna(0)
 result1["cover_ratio"] = result1["wijkcode"].map(list1) / result1["block_area_m2"]
+result1["cover_ratio"] = result1["cover_ratio"].fillna(0)
 #save csv
 result1.to_csv(os.path.join(data_dir, 'coverage_status.csv'), index=False)
 #save file
@@ -42,9 +42,16 @@ fig, ax = plt.subplots(1,3,figsize = (14,12))
 schemes = ['equal_interval','quantiles','natural_breaks']
 cmaps = ['YlOrRd','YlOrBr',"BuPu"]
 for ax, cmap in zip(ax, cmaps):
-    result1.plot(column='cover_ratio',scheme = 'quantiles', k = 12,cmap=cmap,legend=True,ax = ax)
+    result1.plot(column='cover_ratio',scheme = 'quantiles', k = 3, cmap=cmap,legend=True,ax = ax, legend_kwds={'fmt': '{:.5f}'})
     ax.set_title(cmap)
     ax.set_axis_off()
 
 plt.savefig(os.path.join(data_dir, 'Amsterdam_arch_density.png'), dpi=200, bbox_inches='tight')
+
+fig2, ax2 = plt.subplots(figsize=(10, 10))
+blocks.plot(ax= ax2, facecolor='none', edgecolor='grey', linewidth=1.0)
+building_combine.plot(ax= ax2, color='red', markersize=0.5)
+ax2.set_axis_off()
+plt.savefig(os.path.join(data_dir, 'building_distribution.png'), dpi=400, bbox_inches='tight')
+
 plt.show()

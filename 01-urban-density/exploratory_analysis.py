@@ -4,8 +4,8 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 
 script_dir = os.path.dirname(__file__)
-bag1_dir = os.path.join(script_dir,'..','data','amsterdam_buildings.json')
-cbs1_dir = os.path.join(script_dir,'..','data','amsterdam_wijken.json')
+bag1_dir = os.path.join(script_dir,'data','amsterdam_buildings.json')
+cbs1_dir = os.path.join(script_dir,'data','amsterdam_wijken_full.json')
 
 #gpd打开
 arch1 = gpd.read_file(bag1_dir)
@@ -46,5 +46,5 @@ plt.show()
 result1 = block1.copy()
 result1['cover_ratio'] = result1['wijknaam'].map(Z1)/result1['wijk_area_m2']
 plt.figure()
-ax = result1.plot(column='cover_ratio', cmap='YlOrRd', legend=True)
+ax = result1.plot(column='cover_ratio', cmap='YlOrBr', legend=True)
 plt.show()
