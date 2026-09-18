@@ -8,11 +8,13 @@
 | 指标 | 值 |
 |---|---|
 | ModelNet40 test accuracy | **86%** |
+| 训练轮数 | **200 epoch，无提前停止**（见训练曲线） |
 | 10 epoch 时 | ~81.7%（中间结果，**不再引用**） |
 | 训练设备 | NVIDIA RTX 5060 Ti 16 GB（`.venv` 内 torch 2.12.1+cu130，`cuda.is_available() == True`） |
 
-> ⚠️ **待补（作者本人）**：最终跑到第几 epoch、是否提前停止、总耗时。本目录目前**没有留下训练日志**（`pointnet.py` 只打印到 stdout、只保存 `pointnet_acc.png`，而该图未提交）→ **重跑一次**即可产出曲线图，这是 86% 最好的证据。
-> 口径已统一：**86%**（CV 与动机信一致），81.7% 作废。
+**训练曲线**：`figure_training_curve.png` —— 横轴 0→200 epoch，约 50 epoch 后进入平台并稳定在 **0.86–0.87**。这是 86% 的直接证据。
+> 口径已统一：**86%**（CV 与动机信一致）；81.7% 是 10 epoch 的中间结果，作废。
+> ⚠️ 仍未记录：总训练耗时（`pointnet.py` 只打印到 stdout，没有落盘日志）。
 
 ## 数据
 
@@ -40,13 +42,13 @@
 | `pointnet.py` | 模型定义 + 训练循环（含正交正则、测试集评估、曲线保存） |
 | `provider.py` | ModelNet40 读取（OFF 解析）、面积加权采样、单位球归一化、DataLoader |
 | `data/modelnet40/` | 数据集（未提交到 git 的大文件） |
-| `pointnet_acc.png` | 训练曲线（⚠️ 尚未生成/提交） |
+| `figure_training_curve.png` | 训练曲线：200 epoch，平台期 0.86–0.87 |
 | 其余 `*.py` | d2l 课程练习（softmax / MLP / LeNet / ResNet 等），非本项目主体 |
 
 ## 如何运行
 
 ```bash
-python pointnet.py     # 训练 + 每 epoch 评估；结束时保存 pointnet_acc.png
+python pointnet.py     # 训练 + 每 epoch 评估；结束时保存训练曲线
 ```
 
 依赖：`torch`、`numpy`、`matplotlib`、`d2l`（`.venv` 已装，且 CUDA 可用）。
