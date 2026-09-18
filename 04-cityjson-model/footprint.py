@@ -14,11 +14,13 @@ data0 = gpd.read_file(GPKG)
 data0 = data0.to_crs(28992)
 laz0 = laspy.read(LAZ)
 
+px, py, pz = laz0.xyz[:,0], laz0.xyz[:,1], laz0.xyz[:,2]
+pc = np.asarray(laz0.classification)
+ring = 6.0
+
 #boolean
 pointlist = []
-x_all = []
-y_all = []
-z_all = []
+
 per_building = {}
 for idx, row in data0.iterrows():
     geom = row.geometry
@@ -35,20 +37,27 @@ for idx, row in data0.iterrows():
             z_coords = []
 
 
-        px, py, pz = laz0.xyz[:,0], laz0.xyz[:,1], laz0.xyz[:,2]
-        minx, miny, maxx, maxy = geom.bounds
+        minx0, miny0, maxx0, maxy0 = geom.bounds
+        minx, miny, maxx, maxy = minx0 - ring, miny0 - ring, maxx0 + ring, maxy0 + ring
         m = (px >= minx) & (py >= miny) & (px <= maxx) & (py <= maxy)
         cx, cy, cz = px[m], py[m], pz[m]
+        cc = pc[m]
 
-        inside = [geom.contains(Point(x, y)) for x, y in zip(cx, cy)]
-        z_inside = cz[inside]
-        if len(z_inside) == 0:
+        inside = np.array([geom.contains(Point(x, y)) for x, y in zip(cx, cy)], dtype=bool)
+        roof_pts = cz[inside & (cc==6)]
+
+        buf = geom.buffer(ring)
+        cand = ~inside & (cc == 2)
+        ground_pts = [z for x, y, z in zip(cx[cand], cy[cand], cz[cand])
+                      if buf.contains(Point(x, y))]
+
+        if len(roof_pts) == 0 or len(ground_pts) == 0:
             continue
 
         pointlist.append((x_coords, y_coords,z_coords))
 
-        ground= float(np.percentile(z_inside,10))
-        roof = float(np.percentile(z_inside,90))
+        ground= float(np.median(ground_pts))
+        roof = float(np.percentile(roof_pts,90))
         per_building[f"b{len(per_building)}"] = (ground, roof, roof-ground)
 
 coords_clean = []
@@ -107,6 +116,7 @@ def riseup(vertices_2d, building_rings, per_building):
         solids[pid] = {"base":base, "top":top, "walls":walls}
 
     for pid, s in solids.items():
+        ground, roof, _ = per_building[pid]
         base, top, walls = s["base"], s["top"], s["walls"]
         ground_surf = [base +[base[0]]]
         roof_surf = [top + [top[0]]]
@@ -126,7 +136,7 @@ def riseup(vertices_2d, building_rings, per_building):
                 "yearOfConstruction":2000
             },
 
-            "geometry": [{"type":"Solid", "lod":"1.3",
+            "geometry": [{"type":"Solid", "lod":"1.2",   # 每栋只用一个统一高度 → LoD1.2（LoD1.3 要求一栋内有显著高差）
                           "boundaries": boundaries,
                           "semantics": {"surfaces":[{"type":t} for t in semantics],
                                         "values": [[i] for i in range(len(semantics))]}}]
