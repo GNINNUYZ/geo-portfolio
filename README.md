@@ -20,9 +20,9 @@ A portfolio of applied projects in geospatial 3D modelling and point cloud proce
 | 3D Web Platform (06) | CityJSON 2.0 | PostGIS + FastAPI + CesiumJS viewer |
 | Half-edge Engine (02) | OBJ meshes | Hand-written half-edge structure (see figure above) |
 | Point Cloud Toolbox (07) | Dutch airborne LAZ | Voxel filter, kd-tree, RANSAC, ICP (added after this figure was drawn) |
-| PointNet (ml) | ModelNet40 | Classification, 86% test accuracy (added after this figure was drawn) |
+| PointNet (08) | ModelNet40 | Classification, 86% test accuracy (shown bottom right of the figure) |
 
-> The overview figure was produced at an earlier stage: it covers the six pipeline projects and the PointNet reproduction. Projects **02 (Half-edge Engine)** and **07 (Point Cloud Toolbox)** were finished afterwards and are not drawn in it.
+> The overview figure covers the six pipeline projects plus the PointNet reproduction. Projects **02 (Half-edge Engine)** and **07 (Point Cloud Toolbox)** were finished afterwards and are not drawn in it.
 
 ## Projects
 
@@ -35,7 +35,7 @@ A portfolio of applied projects in geospatial 3D modelling and point cloud proce
 | 05 | [IFC → CityJSON](05-ifc2cityjson/) | BIM to CityJSON conversion |
 | 06 | [3D Web Platform](06-3d-web-platform/) | FastAPI + PostGIS + CesiumJS viewer |
 | 07 | [Point Cloud Toolbox](07-Voxel_filter/) | Voxel filter, KD-tree, RANSAC, ICP |
-| 08 | [PointNet](ml/) | PointNet implemented from the paper, ModelNet40 classification (86%) |
+| 08 | [PointNet](08-pointnet/) | PointNet implemented from the paper, ModelNet40 classification (86%) |
 
 ## Tech Stack
 

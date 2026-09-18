@@ -21,3 +21,10 @@ SCHEDULE1.md
 goal.md
 POSTER_LAYOUT.md
 cityjson_merged_plan.md
+# datasets (never commit)
+08-pointnet/data/
+data/modelnet40/
+data/MNIST/
+*.off
+*.idx3-ubyte
+*.idx1-ubyte
