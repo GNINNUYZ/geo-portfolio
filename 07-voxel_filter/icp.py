@@ -73,7 +73,7 @@ pts = las.xyz
 mask = ((pts[:, 0] > pts[:, 0].min() + 5) & (pts[:, 0] < pts[:, 0] + 30) &
         (pts[:, 1] > pts[:, 1].min() + 5) & (pts[:, 1] < pts[:, 1] + 30))
 crop = pts[mask]
-crop = voxel_filter(crop, 1.0)
+crop, _ = voxel_filter(crop, 1.0)
 
 angle = 0.2
 true_R = np.array([[np.cos(angle), -np.sin(angle), 0],

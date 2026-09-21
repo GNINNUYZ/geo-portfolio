@@ -6,7 +6,7 @@ import numpy as np
 
 def voxel_filter(points, voxel_size=1.0):
     if len(points) == 0:
-        return np.zeros((0, 3))
+        return np.zeros((0, 3)), 0
 
     mins = points.min(axis=0)
     voxel_xyz = np.floor((points - mins) / voxel_size).astype(np.int64)
@@ -19,7 +19,7 @@ def voxel_filter(points, voxel_size=1.0):
     counts = np.bincount(inverse)
     centroids = sums / counts[:, None]
 
-    return centroids
+    return centroids, n_voxels
 
 if __name__ == '__main__':
     import laspy
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         las = f.read()
     pts = las.xyz
 
-    centroids = voxel_filter(pts, 1.0)
+    centroids, n_voxels = voxel_filter(pts, 1.0)
 
     print('压缩率：{:.1f}%'.format(100 * n_voxels / las.xyz.shape[0]))
 

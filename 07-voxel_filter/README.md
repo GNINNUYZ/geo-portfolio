@@ -67,3 +67,10 @@ Conclusion: brute force is faster below ~10k points; KD-tree becomes clearly fas
 
 All passed: empty cloud, single point, identical points, large voxel, fewer than 3 points for RANSAC.
 
+### BUG FIX history
+1. L37 read 'n_voxels' name error.
+n_voxel can not get parameters in modules branch, n_voxels get parameter in voxel_filter() function.
+2. voxel_filter() return centroids, n_voxels 2 parameters.
+3. find in L9 pre-return branch also need 2 paramaters.
+4. recalculate need to voxel logic re-calculate.
+5. need check all return parameters, not only the last one.
