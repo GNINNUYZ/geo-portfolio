@@ -59,11 +59,19 @@ for p in model.by_type("IfcProduct"):
 
 cityjson = {
     "type":"CityJSON", "version":"1.1",
+    "transform":{
+        'scale':[1, 1, 1],
+        'translate':[0, 0, 0]
+    },
+    "metadata": {
+        "referenceSystem": "https://www.opengis.net/def/crs/EPSG/0/0"
+        },
     "CityObjects":{
         "building-1":{
             "type":"Building",
             "geometry":[{
                 "type":"MultiSurface",
+                "lod":"1.2",
                 "boundaries":[],
                 "semantics":{
                     "surfaces":[],
