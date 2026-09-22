@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import laspy
+import time
 from kdtree import build, kNN
 from voxel_filter import voxel_filter
 
@@ -9,8 +10,8 @@ from voxel_filter import voxel_filter
 def icp(src, dst, max_iter=50, tol=1e-6):
     R = np.eye(3)
     t = np.zeros(3)
-    prev_error = 0
-
+    prev_error = float('inf')
+    t1 = time.time()
     for i in range(max_iter):
         src_trans = src @ R.T + t
         pts = dst
@@ -45,12 +46,13 @@ def icp(src, dst, max_iter=50, tol=1e-6):
         t = t @ dR.T  + dt
 
         #error
-        error = ((src @ R.T + t - near_pts) ** 2).sum()
-        if abs(prev_error - error) < tol:
+        error = np.sqrt(np.mean(((src @ R.T + t - near_pts) ** 2)))
+        if abs((prev_error - error)/prev_error) < tol:
             break
         prev_error = error
-
-    return R, t
+    t2 = time.time()
+    t_use = t2 -t1
+    return R, t, i, t_use, error
 
 src = np.random.rand(1000, 3) * 10
 
@@ -60,12 +62,14 @@ true_R = np.array([[np.cos(0.3), -np.sin(0.3), 0],
 true_t = np.array([1, 2, 3])
 dst = src @ true_R.T + true_t
 
-R, t = icp(src, dst)
+R, t, _, _, _= icp(src, dst)
 
 print("R error:", np.linalg.norm(R - true_R))
 print('t error:', np.linalg.norm(t - true_t))
 
-with laspy.open(r'..\data\small_dutch.laz') as f:
+scr_path = os.path.dirname(__file__)
+data_path = os.path.join(scr_path,'..','data','small_dutch.laz')
+with laspy.open(data_path) as f:
     las = f.read()
 
 pts = las.xyz
@@ -84,7 +88,10 @@ true_t = np.array([1.0, 2.0, 0.5])
 src = crop
 dst = crop @ true_R.T + true_t
 
-R, t = icp(src, dst)
+R, t, i, t_use, error = icp(src, dst)
 
 print("R error:", np.linalg.norm(R - true_R))
 print('t error:', np.linalg.norm(t - true_t))
+print(f'end after {i} iter:')
+print('time use:', t_use)
+print('error:', error)
