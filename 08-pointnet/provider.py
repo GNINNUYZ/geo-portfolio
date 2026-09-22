@@ -3,7 +3,7 @@ import os
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 import torch
 
-data_dir = 'data/modelnet40/ModelNet40'
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/modelnet40/ModelNet40')
 n_points = 1024
 
 def read_off(path):

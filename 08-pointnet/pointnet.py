@@ -6,6 +6,8 @@ from d2l import torch as d2l
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 import os
 import matplotlib.pyplot as plt
+import time
+
 
 #输入点云
 from provider import train_loader, test_loader
@@ -102,13 +104,19 @@ net = PointNet(40).to(device)
 optimizer = torch.optim.Adam(net.parameters(), lr = 0.001)
 loss_fn = nn.CrossEntropyLoss()
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
+
 def ortho_loss(A):
     I = torch.eye(64, device=A.device)
     return F.mse_loss(A @ A.transpose(1, 2), I.expand_as(A))
 
+script_path = os.path.dirname(__file__)
+log_path = os.path.join(script_path, 'train_log.txt')
 accs = []
-
+open(log_path, 'w').close()
+t_start = time.time()
 for epoch in range(200):
+    t_start1 = time.time()
+
     net.train()
     for xb, yb in train_loader:
         xb, yb = xb.to(device), yb.to(device)
@@ -130,12 +138,23 @@ for epoch in range(200):
 
     accs.append(correct / total)
     scheduler.step()
+    t_end = time.time()
     print(f'epoch {epoch}: loss {loss.item():.4f}  acc{correct/total:.4f}')
+    with open(log_path, 'a') as f:
+        f.write(f'epoch {epoch}: loss {loss.item():.4f}  acc{correct/total:.4f} time {t_end - t_start1}')
+        f.close()
+
+best_idx = np.argmax(accs)
+best_acc = accs[best_idx]
+best_epoch = best_idx
 
 
 plt.plot(accs)
 plt.xlabel('epoch')
 plt.ylabel('acc %')
-script_path = os.path.dirname(__file__)
+
 plt.savefig(os.path.join(script_path, 'pointnet_acc.png'))
+with open(log_path, 'a') as f:
+        f.write(f'best acc: {best_acc} best epoch:{best_epoch} time {time.time() - t_start} GPU({torch.cuda.get_device_name(0)})')
+        f.close()
 plt.show()

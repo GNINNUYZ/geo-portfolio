@@ -7,14 +7,21 @@
 
 | 指标 | 值 |
 |---|---|
-| ModelNet40 test accuracy | **86%** |
-| 训练轮数 | **200 epoch，无提前停止**（见训练曲线） |
+| ModelNet40 test accuracy（best） | **0.8679**（epoch 43，2026-09-22 运行） |
+| 末轮 accuracy | 0.8497（epoch 199）—— 峰值后有明显退化 |
+| 训练轮数 | **200 epoch，无提前停止** |
+| 总训练耗时 | **2692.96 s ≈ 44.9 分钟**（首轮 765 s，其后约 9 s/轮） |
 | 10 epoch 时 | ~81.7%（中间结果，**不再引用**） |
 | 训练设备 | NVIDIA RTX 5060 Ti 16 GB（`.venv` 内 torch 2.12.1+cu130，`cuda.is_available() == True`） |
 
-**训练曲线**：`figure_training_curve.png` —— 横轴 0→200 epoch，约 50 epoch 后进入平台并稳定在 **0.86–0.87**。这是 86% 的直接证据。
-> 口径已统一：**86%**（CV 与动机信一致）；81.7% 是 10 epoch 的中间结果，作废。
-> ⚠️ 仍未记录：总训练耗时（`pointnet.py` 只打印到 stdout，没有落盘日志）。
+**训练曲线**：`pointnet_acc.png` —— 横轴 0→199 epoch。**峰值 0.8679 出现在 epoch 43，之后逐步回落到末轮 0.8497**；200 轮中 47 轮 >0.85。
+> 口径：**86%（取 best，= 0.8679）**，与 CV 及动机信一致；81.7% 是 10 epoch 的中间结果，作废。
+> ⚠️ 注意"峰值 vs 末值"的差别：本 README 早期版本写作"约 50 epoch 后稳定在 0.86–0.87"，
+> 但**逐 epoch 日志显示峰值后是回落、不是稳定**（epoch 100 之后多在 0.84–0.85）。
+> 引 86% 时应说明它是 **best**，不是最终值。
+
+**训练日志**：`train_log.txt` —— 每 epoch 一行（`epoch / loss / acc / 单轮耗时`），末行为汇总
+（`best acc` / `best epoch` / 总耗时 / GPU）。这是 86% 的可核实证据（2026-09-22 补）。
 
 ## 数据
 
@@ -39,16 +46,22 @@
 
 | 文件 | 说明 |
 |---|---|
-| `pointnet.py` | 模型定义 + 训练循环（含正交正则、测试集评估、曲线保存） |
+| `pointnet.py` | 模型定义 + 训练循环（含正交正则、测试集评估、曲线与日志落盘） |
 | `provider.py` | ModelNet40 读取（OFF 解析）、面积加权采样、单位球归一化、DataLoader |
-| `data/modelnet40/` | 数据集（未提交到 git 的大文件） |
-| `figure_training_curve.png` | 训练曲线：200 epoch，平台期 0.86–0.87 |
+| `data/modelnet40/` | 数据集（未提交到 git 的大文件，9.3 GB） |
+| `pointnet_acc.png` | 训练曲线（2026-09-22 运行）：峰值 0.8679 @ epoch 43，末轮 0.8497 |
+| `train_log.txt` | 逐 epoch 日志 + 末行汇总（best acc / best epoch / 总耗时 / GPU） |
 | 其余 `*.py` | d2l 课程练习（softmax / MLP / LeNet / ResNet 等），非本项目主体 |
 
 ## 如何运行
 
 ```bash
-python pointnet.py     # 训练 + 每 epoch 评估；结束时保存训练曲线
+cd 08-pointnet
+python pointnet.py     # 训练 + 每 epoch 评估；写 train_log.txt 并保存训练曲线
 ```
 
-依赖：`torch`、`numpy`、`matplotlib`、`d2l`（`.venv` 已装，且 CUDA 可用）。
+**Interpreter:** `.venv`（Python 3.11 + torch 2.12.1+cu130）。注意 **Anaconda 环境没有 torch**。
+数据路径是相对路径 `data/modelnet40/ModelNet40`，所以**必须在 `08-pointnet/` 下运行**
+（`08-pointnet/data/` 已在 `.gitignore` 中，不进仓库）。
+
+依赖：`torch`、`numpy`、`matplotlib`、`d2l`。
