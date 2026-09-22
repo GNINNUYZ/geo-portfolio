@@ -41,9 +41,9 @@ result1.to_file(os.path.join(data_dir, "Amsterdam_architecture_density.geojson")
 fig, ax = plt.subplots(1,3,figsize = (14,12))
 schemes = ['equal_interval','quantiles','natural_breaks']
 cmaps = ['YlOrRd','YlOrBr',"BuPu"]
-for ax, cmap in zip(ax, cmaps):
-    result1.plot(column='cover_ratio',scheme = 'quantiles', k = 3, cmap=cmap,legend=True,ax = ax, legend_kwds={'fmt': '{:.5f}'})
-    ax.set_title(cmap)
+for ax, sch, c in zip(ax, schemes, cmaps):
+    result1.plot(column='cover_ratio',scheme = sch, k = 3, cmap=c,legend=True,ax = ax, legend_kwds={'fmt': '{:.5f}'})
+    ax.set_title(sch)
     ax.set_axis_off()
 
 plt.savefig(os.path.join(data_dir, 'Amsterdam_arch_density.png'), dpi=200, bbox_inches='tight')
