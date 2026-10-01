@@ -74,3 +74,81 @@ n_voxel can not get parameters in modules branch, n_voxels get parameter in voxe
 3. find in L9 pre-return branch also need 2 paramaters.
 4. recalculate need to voxel logic re-calculate.
 5. need check all return parameters, not only the last one.
+
+---
+
+## PCA 法向估计 + 邻域尺度实验（M1）
+
+`pca_normal.py` — 逐点法向估计 + 三个几何派生量 + 合成曲面上的邻域尺度实验（对应 Weinmann et al. 2015 §2.1 的「最优邻域」）。
+
+### 方法（一句话）
+
+每个点取 k 近邻 → 中心化 → 协方差 H = XᵀX → `eigh(H)` → **最小特征值方向 = 法向**（eigh 返回升序：λ0 ≤ λ1 ≤ λ2）。
+
+三个派生量（升序特征值）：
+
+```
+线性度  linearity  = (λ2 − λ1) / λ2
+平面度  planarity  = (λ1 − λ0) / λ2
+散射度  scattering = λ0 / λ2
+```
+
+### 合成曲面结果（各 1000 点，真值法向已知）
+
+| 曲面 | 参数 | 曲率 | U 形 | 最优 k | 最优误差 |
+|---|---|---|---|---|---|
+| 平面 | z=0 | 0 | 无（单调下降） | — | 0.0°（无噪声） |
+| 球 | r=100 | 0.01 | 浅 U | 【填】 | 【填】 |
+| 柱 | r=1 | 1 | 深 U | 【填】 | 【填】 |
+
+k 扫描原始数字（k = 5 / 10 / 20 / 50 / 100 / 200，单位：度）：
+
+sphere
+k=  5 mean_angle=2.9134°
+k= 10 mean_angle=1.9810°
+k= 20 mean_angle=1.6054°
+k= 50 mean_angle=1.7836°
+k=100 mean_angle=2.2686°
+k=200 mean_angle=3.0372°
+column
+k=  5 mean_angle=1.5710°
+k= 10 mean_angle=1.2670°
+k= 20 mean_angle=1.2952°
+k= 50 mean_angle=1.7309°
+k=100 mean_angle=2.5296°
+k=200 mean_angle=4.6137°
+sphere_noisy
+k=  5 mean_angle=2.9367°
+k= 10 mean_angle=1.9816°
+k= 20 mean_angle=1.6055°
+k= 50 mean_angle=1.7789°
+k=100 mean_angle=2.2716°
+k=200 mean_angle=3.0410°
+column_noisy
+k=  5 mean_angle=13.8004°
+k= 10 mean_angle=4.6335°
+k= 20 mean_angle=2.3437°
+k= 50 mean_angle=1.8874°
+k=100 mean_angle=2.5699°
+k=200 mean_angle=4.6572°
+
+> 图：把「误差 vs k」画出来（matplotlib），存成 `error_vs_k.png`，放这里引用：`![误差曲线](error_vs_k.png)`
+
+### 加噪右移（最优邻域的核心现象）
+
+柱加 σ=0.01 噪声后：
+
+- 最优 k 从 **10** 右移到 **50**
+- k=5 误差从 **1.5** 升到 **13.8**（噪声主导小邻域）
+
+球加噪几乎无变化，原因：r=100 尺度太大，σ=0.01 噪声忽略不计 → **噪声要匹配曲面局部尺度才有意义**。
+
+### 真实数据（已砍，2026-09）
+
+> 采样问题：`small_dutch.laz` 覆盖区域无植被点（class 3/4/5 缺失）、建筑点仅 73 个，真实数据验证**跳过**。合成曲面已完整验证「最优邻域」结论，真实数据留到有合适数据时再做。
+
+### 三行结论
+
+1. 平面无 U（曲率 0）
+2. 柱深 U、球浅 U（U 的深浅 = 曲率）
+3. 加噪后最优 k 右移（最优邻域随噪声移动）
