@@ -1,0 +1,7 @@
+{
+  "pipeline":[
+    {"type":"readers.las","filename":"data/C_37EN2.LAZ"},
+    {"type":"filters.head","count":1000},
+    {"type":"writers.las","filename":"data/test_1000.laz"}
+  ]
+}
