@@ -1,9 +1,23 @@
 #orientation
 import numpy as np
+import kdtree
+
+np.random.seed(42)
 #pca_normal#
-normal = []
-def kNN(tree, pts, query, k=10):
-    pass
+def compute_normals(points, k = 20):
+    tree = kdtree.build(points)
+    normal, eiglist = [], []
+    for i in range(len(points)):
+        idx = kdtree.kNN(tree, points, points[i], k)
+        pts = points[idx]
+        pts_cen = pts.mean(axis=0)
+        X = pts - pts_cen
+        H = X.T @ X
+        eigvals, cov = np.linalg.eigh(H)
+        normal.append(cov[:,0])
+        eiglist.append(eigvals)
+    return np.array(normal), np.array(eiglist)
+
 #DSU
 class DSU:
     def __init__(self,n):
@@ -34,16 +48,26 @@ class DSU:
             self.comp -= 1
             return True
 
-pts = []
+#make sphere
+r = 100
+theta = np.random.uniform(0, np.pi, 1000)
+phi = np.random.uniform(0, 2*np.pi, 1000)
+x = r * np.sin(theta) * np.cos(phi)
+y = r * np.sin(theta) * np.sin(phi)
+z = r * np.cos(theta)
+sphere = np.column_stack([x, y, z])
+normal_sph = sphere / r
+
+pts = sphere
+normal, eigvals = compute_normals(pts, k=20)
 idx = np.arange(len(pts))
-query = pts[0]
-tree = kNN.build()
+tree = kdtree.build(pts)
 line = []
 keys = set()
 #MST
 k=10
 for i in idx:
-    near_idx = kNN(tree, pts, pts[i], k)
+    near_idx = kdtree.kNN(tree, pts, pts[i], k)
     for j in range(len(near_idx)):
         if i == near_idx[j]:
             continue
@@ -74,6 +98,13 @@ line_w = np.column_stack((ls, le, w))
 w_sort = np.argsort(w)
 line_sort = np.column_stack((ls[w_sort], le[w_sort], w[w_sort]))
 
+line_coherence = 0
+for i in w_sort:
+    if normal[ls[i]] @ normal[le[i]] >= 0:
+        line_coherence += 1
+line_coh_ratio = line_coherence / len(w_sort)
+print(f'line coherence:{line_coh_ratio * 100}%')
+
 #Kruskal
 dsu = DSU(len(pts))
 MST = []
@@ -93,3 +124,31 @@ for i in MST:
     a, b = ls[i], le[i]
     near_connect_sheet[a].append(b)
     near_connect_sheet[b].append(a) 
+
+#view_point_method
+vp = pts.mean(axis=0) + [0, 0, 300]
+normal, eigvals = compute_normals(pts, k=20)
+flip = 0
+for i in idx:
+    if normal[i] @ (vp - pts[i]) <= 0:
+        normal[i] *= -1
+        flip += 1
+
+outter_normal_count = 0
+for i in range(len(normal)):
+    if normal[i] @ normal_sph[i] > 0:
+        outter_normal_count += 1
+outter_ratio = outter_normal_count / len(idx)
+inward_ratio = 1 - outter_ratio
+coherence = max(outter_ratio, inward_ratio)
+
+visible_outter = 0
+visible_p = 0
+for i in idx:
+    if normal_sph[i] @ (vp - pts[i]) > 0:
+        visible_p += 1
+        if normal[i] @ normal_sph[i] > 0:
+            visible_outter += 1
+visible_ratio = visible_outter / visible_p
+
+print(f'outter normal percentage:{outter_normal_count}, filp percentage:{(flip/len(idx)) * 100}%, cohierence:{coherence * 100}%, visible coherence ratio:{visible_ratio * 100}%')
