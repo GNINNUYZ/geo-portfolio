@@ -28,3 +28,8 @@ data/MNIST/
 *.off
 *.idx3-ubyte
 *.idx1-ubyte
+
+# 计划文件的备份副本 —— SCHEDULE.md / goal.md 已被忽略，这些 .bak 是它们的完整拷贝
+*.bak
+*.bak_before_*
+_scripts/*.md
