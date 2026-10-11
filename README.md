@@ -34,7 +34,7 @@ A portfolio of applied projects in geospatial 3D modelling and point cloud proce
 | 04 | [CityJSON Model](04-cityjson-model/) | Building footprints → LoD 1.2 CityJSON |
 | 05 | [IFC → CityJSON](05-ifc2cityjson/) | BIM to CityJSON conversion |
 | 06 | [3D Web Platform](06-3d-web-platform/) | FastAPI + PostGIS + CesiumJS viewer |
-| 07 | [Point Cloud Toolbox](07-Voxel_filter/) | Voxel filter, KD-tree, RANSAC, ICP |
+| 07 | [Point Cloud Toolbox](07-voxel_filter/) | Voxel filter, KD-tree, RANSAC, ICP |
 | 08 | [PointNet](08-pointnet/) | PointNet implemented from the paper, ModelNet40 classification (86%) |
 
 ## Tech Stack

@@ -33,3 +33,9 @@ data/MNIST/
 *.bak
 *.bak_before_*
 _scripts/*.md
+
+# 个人过程文档 —— 留在本地，不进作品集首页（文献台账.md 例外：它保留在仓库里）
+M0_止血清单.md
+SCHEDULE_审计_20260921.md
+院校匹配.md
+repo_cleanup_plan.md
