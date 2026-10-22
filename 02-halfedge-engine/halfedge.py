@@ -129,6 +129,45 @@ class Mesh:
             if he.origin.halfedge == None:
                 he.origin.halfedge = he
 
+
+    def build_from_arrays(self, verts, faces):
+        self.vertices, self.faces, self.halfedges = [], [], []
+        for v in verts:
+            x, y, z = float(v[0]), float(v[1]), float(v[2])
+            self.vertices.append(Vertex(x, y, z))
+        edgemap = dict()
+        
+        for i in range(len(faces)):
+            f = faces[i]
+            face = Face()
+            self.faces.append(face)
+            face_hes = [] 
+            for j in range(len(f)):
+                startpoint = self.vertices[f[j]]
+                endpoint = self.vertices[f[(j+1) % len(f)]]
+                he = HalfEdge()
+                he.origin = startpoint
+                he.face = face
+                self.halfedges.append(he)
+                face_hes.append(he)
+                edgemap[(id(startpoint), id(endpoint))] = he
+            for m in range(len(face_hes)):
+                face_hes[m].next = face_hes[(m+1) % len(face_hes)]
+                face_hes[m].prev = face_hes[(m-1) % len(face_hes)]
+            face.halfedge = face_hes[0]
+
+        for he in self.halfedges:
+            v_origin = he.origin
+            v_next_origin = he.next.origin
+            key = (id(v_next_origin), id(v_origin))
+            if key in edgemap:
+                twin = edgemap[key]
+                he.twin = twin
+                twin.twin = he
+        for he in self.halfedges:
+            if he.origin.halfedge == None:
+                he.origin.halfedge = he
+
     def is_valid(self):
         v1 = len(self.vertices)
         e1 = len(self.halfedges)//2
@@ -184,31 +223,32 @@ class Mesh:
                 f.write('\n')
  
 #test
-m = Mesh()
-m.build_from_obj(data_dir)
-print(len(m.vertices))
-print(len(m.faces))
-print(len(m.halfedges))
-print(len(m.boundary_edges()))
-print(m.faces)
+if __name__ == '__main__':
+    m = Mesh()
+    m.build_from_obj(data_dir)
+    print(len(m.vertices))
+    print(len(m.faces))
+    print(len(m.halfedges))
+    print(len(m.boundary_edges()))
+    print(m.faces)
 
-f= m.faces[0]
-print(m.face_vertices(f))
+    f= m.faces[0]
+    print(m.face_vertices(f))
 
-twin_count = sum(1 for he in m.halfedges if he.twin != None)
-pairs = twin_count//2
-print(pairs)
-print(m.is_valid())
-print(len(m.vertices_faces(m.vertices[2])))
-print(m.is_2_manifold())
+    twin_count = sum(1 for he in m.halfedges if he.twin != None)
+    pairs = twin_count//2
+    print(pairs)
+    print(m.is_valid())
+    print(len(m.vertices_faces(m.vertices[2])))
+    print(m.is_2_manifold())
 
-#round trip
-m.to_obj()
-test_path = os.path.join(script_dir,'..','data','cube_t0_obj_test.obj')
-m2 = Mesh()
-m2.build_from_obj(test_path)
+    #round trip
+    m.to_obj()
+    test_path = os.path.join(script_dir,'..','data','cube_t0_obj_test.obj')
+    m2 = Mesh()
+    m2.build_from_obj(test_path)
 
-assert len(m.vertices) == len(m2.vertices)
-assert len(m.faces) == len(m2.faces)
-assert len(m.halfedges) == len(m2.halfedges)
-print('round trip success')
+    assert len(m.vertices) == len(m2.vertices)
+    assert len(m.faces) == len(m2.faces)
+    assert len(m.halfedges) == len(m2.halfedges)
+    print('round trip success')

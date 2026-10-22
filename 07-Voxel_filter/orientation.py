@@ -75,8 +75,8 @@ def orient_mst(pts, normals, k_graph=10, seeds=None):
     for ele in line:
         ls.append(ele[0])
         le.append(ele[1])
-    ls = np.array(ls)
-    le = np.array(le)
+    ls = np.array(ls, dtype=np.int64)
+    le = np.array(le, dtype=np.int64)
 
     ns = out[ls]
     ne = out[le]
