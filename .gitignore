@@ -36,6 +36,20 @@ _scripts/*.md
 
 # 个人过程文档 —— 留在本地，不进作品集首页（文献台账.md 例外：它保留在仓库里）
 M0_止血清单.md
-SCHEDULE_审计_20260921.md
+SCHEDULE_*.md
 院校匹配.md
 repo_cleanup_plan.md
+
+# 根目录散落的旧产物 —— 都是在错误工作目录下跑脚本留下的，
+# 03-terrain-pipeline/ 内已有对应版本（已跟踪，保留）
+/*.png
+/*.json
+
+# 计划维护脚本（fix_* / restore_* 之类），不属于作品集代码
+_scripts/*.py
+
+# 误存文件（文件名本身是 `import kdtree.py`）
+08-pointnet/import kdtree.py
+
+# 数据目录里的临时脚本
+data/#*.py
