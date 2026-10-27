@@ -32,6 +32,78 @@ def boundary_loops(e_count, n_v):
 
     return n_loop, n_bad
 
+def build_link(n_v, faces):
+    link = [[] for _ in range(n_v)]
+
+    #half-edge
+    for face in faces:
+        n = len(face)
+        for k, v in enumerate(face):
+            prev = face[k-1]
+            nxt = face[(k+1) % n]
+            link[v].append((prev, nxt))
+    return link
+
+def nonmanifold_vertices(n_v, faces) -> list:
+    link = build_link(n_v, faces)
+    bad = []
+
+    for v in range(n_v):
+        edges = link[v]
+
+        if not edges:
+            continue
+        parent = {}
+
+        def find(x):
+            parent.setdefault(x, x)
+            while parent[x] != x:
+                x = parent[x]
+            return x
+
+        def union(a, b):
+            ra = find(a)
+            rb = find(b)
+            if ra != rb:
+                parent[ra] = rb
+
+        deg = Counter()
+        for (a, b) in edges:
+            union(a, b)
+            deg[a] += 1
+            deg[b] += 1
+
+        n_pieces= len({find(x) for x in parent})
+
+        max_deg = max(deg.values())
+
+        if n_pieces > 1 or max_deg > 2:
+            bad.append(v)
+    
+    return bad
+
+def degenerate_faces(verts, faces):
+    verts = np.asarray(verts, dtype=float)
+    ext = np.linalg.norm(verts.max(axis=0) - verts.min(axis=0))
+    eps = 1e-12 * ext**2
+
+    bad = []
+    for fi, f in enumerate(faces):
+        if len(set(f)) != len(f):
+            bad.append(fi)
+            continue
+
+        p = [verts[i] for i in f]
+        m = len(p)
+        nrm = sum(np.cross(p[k], p[(k+1)%m]) for k in range(m))
+        area = 0.5 * np.linalg.norm(nrm)
+
+        if area < eps:
+            bad.append(fi)
+        
+    return bad
+
+        
 def mesh_stats_arrays(verts, faces):
     #v, f, e
     n_v = len(verts)
@@ -44,6 +116,8 @@ def mesh_stats_arrays(verts, faces):
     n_bound = dist.get(1, 0)
     n_inner = dist.get(2, 0)
     n_nonman = sum(c for k,  c in dist.items() if k >= 3)
+    nonman = nonmanifold_vertices(n_v, faces)
+    degen = degenerate_faces(verts, faces)
 
     #vertices map from edge
     eu = []
@@ -60,6 +134,14 @@ def mesh_stats_arrays(verts, faces):
     chi_c = v_c - e_c + f_c
 
     n_loop, n_bad = boundary_loops(e_count, n_v)
+    
+    directed = Counter()
+    for f in faces:
+        for u, v in zip(f, f[1:] + f[:1]):
+            directed[u, v] += 1
+
+    is_oriented = not any(c >= 2 for c in directed.values())
+    
 
     return {'V':n_v, 'E': n_e, "F": n_f,
             'chi': chi, "components": n_comp,
@@ -68,5 +150,10 @@ def mesh_stats_arrays(verts, faces):
              'bad_boundary_vertices': n_bad,
              'interior_edges': n_inner,
              'nonmanifold_edges': n_nonman,
-             'chi_per_component': chi_c}
-
+             'chi_per_component': chi_c,
+             'nonmanifold_vertices': nonman,
+             'is_manifold': (n_nonman == 0 and len(nonman) == 0),
+             'degenerate_faces': degen,
+            'is_closed': n_bound == 0,
+            'is_oriented': is_oriented
+             }
