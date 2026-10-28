@@ -128,10 +128,10 @@ def test_degenerate_face():
     for name, (verts, faces), expected in cases:
         got = degenerate_faces(verts, faces)
         if got == expected:
-            print(f'  {name}: PASS')
+            print(f'{name}: PASS')
             passed += 1
         else:
-            print(f'  {name}: FAIL  expected {expected!r}, got {got!r}')
+            print(f'{name}: FAIL  expected {expected!r}, got {got!r}')
     return passed, len(cases)
 
 DP, DN = test_degenerate_face()
