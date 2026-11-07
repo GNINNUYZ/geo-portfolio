@@ -3,7 +3,7 @@ import numpy as np, sys
 
 import hausdorff as ha
 
-def cube(h=1):
+def make_cube(h=1):
     verts = []
     for i in (h, -h):
         for j in (h, -h):
@@ -28,6 +28,54 @@ def cube(h=1):
             v4[q] = s
             faces += [[v, v2, v3], [v2, v4, v3]]
     return np.array(verts), np.array(faces)
+
+def test_cube():
+    CASE0 = [
+        (
+            'test_cube', make_cube(1)[0], (8, 3)
+        ),
+        (
+            'test_cube', make_cube(1)[1], (12, 3, 3)
+        ),
+        ]
+    CASE0_5 = [
+        (
+            'test_cube_area', make_cube(1), 24.0
+        ),
+        (
+            'test_cube_area', make_cube(0.5), 6.0
+        ),
+        ]
+    
+
+    passed = 0
+    total = 0
+    for name, cube, expected in CASE0:
+        total += 1
+        got = np.array(cube).shape
+        if got == expected:
+            print(f'{name}: PASS')
+            passed += 1
+        else:
+            print(f'{name}: FAIL  expected {expected!r}, got {got!r}')
+
+    for name, cube, expected in CASE0_5:
+        total += 1
+        s_sum = 0
+        for f in cube[1]:
+            l1 = f[1] - f[0]
+            l2 = f[2] - f[0]
+            s = 0.5 * np.linalg.norm(np.cross(l1, l2))
+            s_sum += s
+
+        got = s_sum
+        if abs(got - expected) <= 1e-6:
+            print(f'{name}: PASS')
+            passed += 1
+        else:
+            print(f'{name}: FAIL  expected {expected!r}, got {got!r}')
+    return passed, total
+
 
 srf = np.array(((0,0,0), (2,0,0), (1,2,0)))
 mesh2 = np.array((((0,0,0), (2,0,0), (1,2,0)), ((10,0,0), (12,0,0), (11,2,0))))
@@ -102,7 +150,7 @@ def hausdroff():
 
     CASE4 = [
         (
-            'hausdroff',((cube(0.5) + cube(1.5))), (1.0, 1.7320508, 1.4142136, 4.2426407, 5.9746915)
+            'hausdroff',((make_cube(0.5) + make_cube(1.5))), (1.0, 1.7320508, 1.4142136, 4.2426407, 5.9746915)
         )
     ]
 
@@ -151,5 +199,8 @@ def hausdroff():
 
 
 p, n = hausdroff()
+p6, n6 = test_cube()
+p += p6
+n += n6
 print(f'{p} passed, {n-p} failed')
 sys.exit(0 if p == n else 1)
