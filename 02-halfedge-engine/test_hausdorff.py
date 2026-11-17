@@ -96,9 +96,6 @@ v7s = ha.p_dis2surf(v7, srf)
 v8 = np.array((-1.5, 2, 0))
 v8s = ha.p_dis2surf(v8, srf)
 
-print(v1s,'\n', v2s,'\n', v3s,'\n', v4s,'\n', v5s,'\n', v6s,'\n', v7s,'\n', v8s)
-
-
 def hausdroff():
     CASES1 = [
     (
@@ -197,10 +194,10 @@ def hausdroff():
 
     return passed, total
 
-
-p, n = hausdroff()
-p6, n6 = test_cube()
-p += p6
-n += n6
-print(f'{p} passed, {n-p} failed')
-sys.exit(0 if p == n else 1)
+if __name__ == '__main__':
+    p, n = hausdroff()
+    p6, n6 = test_cube()
+    p += p6
+    n += n6
+    print(f'{p} passed, {n-p} failed')
+    sys.exit(0 if p == n else 1)
