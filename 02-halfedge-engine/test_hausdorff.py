@@ -26,7 +26,10 @@ def make_cube(h=1):
             v4 = v.copy()
             v4[p] = s
             v4[q] = s
-            faces += [[v, v2, v3], [v2, v4, v3]]
+            if s == -h:
+                faces += [[v, v3, v2], [v2, v3, v4]]
+            else:
+                faces += [[v, v2, v3], [v2, v4, v3]]
     return np.array(verts), np.array(faces)
 
 def test_cube():
