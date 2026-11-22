@@ -28,6 +28,27 @@ def test_marching_cubes():
             tpass += 1
     if tpass == tn:
         passed += 1
+
+    c, e, v, i = mc.marching_cubes_sample_2in() #corners, edges, values, iso
+    pts, ts = mc.insert_p(c, e, v, i)
+    
+    pts = np.array(pts)
+    c = np.array(c)
+
+    new_v, normal = mc.srf_direction(c, pts)
+    
+    total += 1
+    if len(new_v) == 2:
+        passed += 1
+    
+    total += 1
+    if normal[0] @ (np.array(new_v[0]).mean(axis=0) - c.mean(axis=0)) >= 0:
+        passed += 1
+
+    total += 1
+    if normal[1] @ (np.array(new_v[1]).mean(axis=0) - c.mean(axis=0)) >= 0:
+        passed += 1
+
     return passed, total
 
 if __name__ == '__main__':

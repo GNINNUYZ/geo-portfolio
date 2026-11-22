@@ -145,9 +145,6 @@ def test_edge_flip():
 
     return passed, total
 
-
-    
-
 if __name__ == '__main__':
     p, n = test_edge_flip()
     print(f'{p} passed, {n-p} failed')
