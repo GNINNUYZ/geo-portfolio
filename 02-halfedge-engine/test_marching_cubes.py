@@ -4,10 +4,11 @@ from test_hausdorff import make_cube
 from edge_flip import faces2idx, flip_cube
 import marching_cubes as mc
 import sys
+import mc_table
 
 def test_marching_cubes():
     c, e, v, i = mc.marching_cubes_sample() #corners, edges, values, iso
-    pts, ts = mc.insert_p(c, e, v, i)
+    pts, ts, _ = mc.insert_p(c, e, v, i)
 
     total = 0
     passed = 0
@@ -30,26 +31,33 @@ def test_marching_cubes():
         passed += 1
 
     c, e, v, i = mc.marching_cubes_sample_2in() #corners, edges, values, iso
-    pts, ts = mc.insert_p(c, e, v, i)
-    
-    pts = np.array(pts)
+
     c = np.array(c)
-
-    new_v, normal = mc.srf_direction(c, pts)
-    
-    total += 1
-    if len(new_v) == 2:
-        passed += 1
-    
-    total += 1
-    if normal[0] @ (np.array(new_v[0]).mean(axis=0) - c.mean(axis=0)) >= 0:
-        passed += 1
+    tri_p = mc.cube_to_triangles(c, e, v, i)
 
     total += 1
-    if normal[1] @ (np.array(new_v[1]).mean(axis=0) - c.mean(axis=0)) >= 0:
+    if len(tri_p) == 2:
         passed += 1
+
+
+    cube_cen = np.array(c).mean(axis=0)
+    normals = []
+    for i, t in enumerate(tri_p):
+        normal = np.cross((t[1] - t[0]), (t[2] - t[0]))
+        normal = normal /np.linalg.norm(normal)
+        normals.append(normal)
+
+    for j, n in enumerate(normals):
+        total += 1
+        if n @ (np.array(tri_p[j]).mean(axis=0) - cube_cen) > 0:
+            passed += 1
+
 
     return passed, total
+
+
+value1 = [0, 1, 0, 0, 0, 0, 0, 0]
+value2 = [0, 1, 1, 0, 0, 0, 0, 0]
 
 if __name__ == '__main__':
     p, n = test_marching_cubes()

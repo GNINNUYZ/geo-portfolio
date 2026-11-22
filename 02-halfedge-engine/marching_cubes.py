@@ -3,24 +3,18 @@ import numpy as np
 from test_hausdorff import make_cube
 import halfedge
 from edge_flip import faces2idx, flip_cube
+import mc_table as mc
 
 def marching_cubes_sample(iso =0.07):
-    base = [0, 0, 0]
-    corner = []
-
-    for i in range(2):
-        a = base.copy()
-        a[2] = i
-        for j in range(2):
-            a[1] = j
-            for k in range(2):
-                a[0] = k
-                corner.append(a.copy())
+    corner = [
+        [0,0,0], [1,0,0], [1,1,0], [0,1,0],
+        [0,0,1], [1,0,1], [1,1,1], [0,1,1],
+    ]
 
     edges = [
-        (0,1), (2,3), (4,5), (6,7),     # 沿 x
-        (0,2), (1,3), (4,6), (5,7),     # 沿 y
-        (0,4), (1,5), (2,6), (3,7),     # 沿 z
+        (0, 1), (1, 2), (2, 3), (3, 0),     # 底面一圈   棱 0–3
+        (4, 5), (5, 6), (6, 7), (7, 4),     # 顶面一圈   棱 4–7
+        (0, 4), (1, 5), (2, 6), (3, 7),     # 四条竖边   棱 8–11
     ]
 
     values = [0, 1, 0, 0, 0, 0, 0, 0]
@@ -29,38 +23,35 @@ def marching_cubes_sample(iso =0.07):
 
 def marching_cubes_sample_2in(iso =0.07):
     base = [0, 0, 0]
-    corner = []
 
-    for i in range(2):
-        a = base.copy()
-        a[2] = i
-        for j in range(2):
-            a[1] = j
-            for k in range(2):
-                a[0] = k
-                corner.append(a.copy())
-
-    edges = [
-        (0,1), (2,3), (4,5), (6,7),     # 沿 x
-        (0,2), (1,3), (4,6), (5,7),     # 沿 y
-        (0,4), (1,5), (2,6), (3,7),     # 沿 z
+    corner = [
+        [0,0,0], [1,0,0], [1,1,0], [0,1,0],
+        [0,0,1], [1,0,1], [1,1,1], [0,1,1],
     ]
 
-    values = [0, 1, 0, 1, 0, 0, 0, 0]
+    edges = [
+        (0, 1), (1, 2), (2, 3), (3, 0),     # 底面一圈   棱 0–3
+        (4, 5), (5, 6), (6, 7), (7, 4),     # 顶面一圈   棱 4–7
+        (0, 4), (1, 5), (2, 6), (3, 7),     # 四条竖边   棱 8–11
+    ]
+
+    values = [0, 1, 1, 0, 0, 0, 0, 0]
 
     return corner, edges, values, iso
 
 def insert_p(corners, edges, values, iso):
     verts = []
     ts = []
+    e_idx = []
     corners = np.array(corners)
-    for e in edges:
+    for idx, e in enumerate(edges):
         if (values[e[0]] >= iso) != (values[e[1]] >= iso):
             t = (iso - values[e[0]]) / (values[e[1]] - values[e[0]])
             vert = corners[e[0]] + t * (corners[e[1]] - corners[e[0]])
             verts.append(vert)
             ts.append(t)
-    return verts, ts
+            e_idx.append(idx)
+    return verts, ts, e_idx
 
 def srf_direction(corners, verts):    
     corners = np.array(corners)
@@ -96,3 +87,12 @@ def srf_direction(corners, verts):
         normal = (normal1, normal2)
 
     return new_v, normal
+
+def cube_to_triangles(corners, edges, values, iso):
+    inside = [values[k] >= iso for k in range(8)]
+    idx = mc.cube_index(inside)
+    tris = mc.triangles_of(idx)
+    pts, ts , e_idx = insert_p(corners, edges, values, iso)
+    by_edge = {e : p for e, p in zip(e_idx, pts)}
+
+    return [tuple(by_edge[e] for e in tri) for tri in tris]
