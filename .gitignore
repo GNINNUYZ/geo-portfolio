@@ -53,3 +53,9 @@ _scripts/*.py
 
 # 数据目录里的临时脚本
 data/#*.py
+
+# 测试 / 导出产物 —— 每次跑都会重写，不该进版本库
+# （data/cube.obj 是输入夹具，要保留，所以不整体忽略 *.obj）
+02-halfedge-engine/*_test.obj
+data/cube_t0_obj_test.obj
+data/test*.obj

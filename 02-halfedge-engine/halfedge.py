@@ -208,8 +208,9 @@ class Mesh:
                 result.append(False)
         return result
         
-    def to_obj(self):
-        path = os.path.join(script_dir,'..','data','cube_t0_obj_test.obj')
+    def to_obj(self, path = None):
+        if path is None:
+            path = os.path.join(script_dir, '..', 'data', 'cube_t0_obj_test.obj')
         with open(path,'w') as f:
             for v in self.vertices:
                 f.write(f'v {v.x} {v.y} {v.z}\n')

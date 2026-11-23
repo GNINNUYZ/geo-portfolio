@@ -5,17 +5,21 @@ import halfedge
 from edge_flip import faces2idx, flip_cube
 import mc_table as mc
 
-def marching_cubes_sample(iso =0.07):
-    corner = [
-        [0,0,0], [1,0,0], [1,1,0], [0,1,0],
-        [0,0,1], [1,0,1], [1,1,1], [0,1,1],
-    ]
+CORNERS = [
+    [0,0,0], [1,0,0], [1,1,0], [0,1,0],
+    [0,0,1], [1,0,1], [1,1,1], [0,1,1],
+]
 
-    edges = [
-        (0, 1), (1, 2), (2, 3), (3, 0),     # 底面一圈   棱 0–3
-        (4, 5), (5, 6), (6, 7), (7, 4),     # 顶面一圈   棱 4–7
-        (0, 4), (1, 5), (2, 6), (3, 7),     # 四条竖边   棱 8–11
-    ]
+EDGES = [
+    (0, 1), (1, 2), (2, 3), (3, 0),     # 底面一圈   棱 0–3
+    (4, 5), (5, 6), (6, 7), (7, 4),     # 顶面一圈   棱 4–7
+    (0, 4), (1, 5), (2, 6), (3, 7),     # 四条竖边   棱 8–11
+]
+
+def marching_cubes_sample(iso =0.07):
+    
+    corner = CORNERS
+    edges = EDGES
 
     values = [0, 1, 0, 0, 0, 0, 0, 0]
 
@@ -96,3 +100,35 @@ def cube_to_triangles(corners, edges, values, iso):
     by_edge = {e : p for e, p in zip(e_idx, pts)}
 
     return [tuple(by_edge[e] for e in tri) for tri in tris]
+
+def sphere_surface_field(n = 33):
+    c = np.linspace(-1.5, 1.5, n)
+    dz, dy, dx = np.meshgrid(c, c, c, indexing='ij')
+    data = np.sqrt(dx**2 + dy**2 + dz**2) - 1.0
+    iso = 0.0
+
+    return data, iso
+
+def marching_cubes(data, iso):
+    
+    nz, ny, nx = data.shape
+    verts = []
+    faces = []
+
+    for z in range(nz - 1):
+        for y in range(ny - 1):
+            for x in range(nx - 1):
+                values = []
+                corners = []
+                for (cx, cy, cz) in CORNERS:
+                    values.append(data[z + cz, y + cy, x + cx])
+                    corners.append([x + cx, y + cy, z + cz])
+
+                tris = cube_to_triangles(corners, EDGES, values, iso)
+
+                for tri in tris:
+                    i0 = len(verts)
+                    verts.extend(tri)
+                    faces.append((i0, i0 + 1, i0 + 2))
+
+    return verts, faces
