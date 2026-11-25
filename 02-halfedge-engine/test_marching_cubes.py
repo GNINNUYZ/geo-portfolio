@@ -54,14 +54,14 @@ def test_marching_cubes():
 
     cube_cen = np.array(c).mean(axis=0)
     normals = []
-    for i, t in enumerate(tri_p):
-        normal = np.cross((t[1] - t[0]), (t[2] - t[0]))
+    for id3, t in tri_p:
+        normal = np.cross((id3[1] - id3[0]), (id3[2] - id3[0]))
         normal = normal /np.linalg.norm(normal)
         normals.append(normal)
 
     for j, n in enumerate(normals):
         total += 1
-        if n @ (np.array(tri_p[j]).mean(axis=0) - cube_cen) > 0:
+        if n @ (np.array(tri_p[j][0]).mean(axis=0) - cube_cen) > 0:
             passed += 1
 
     for k in range(8):

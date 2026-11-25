@@ -143,9 +143,5 @@ def marching_cubes(data, iso):
                             idx3.append(len(verts) - 1)
                     faces.append(tuple(idx3))
 
-
-
-                    
-
     return verts, faces
 
