@@ -99,7 +99,7 @@ def cube_to_triangles(corners, edges, values, iso):
     pts, ts , e_idx = insert_p(corners, edges, values, iso)
     by_edge = {e : p for e, p in zip(e_idx, pts)}
 
-    return [tuple(by_edge[e] for e in tri) for tri in tris]
+    return [(tuple(by_edge[e] for e in tri), tri) for tri in tris]
 
 def sphere_surface_field(n = 33):
     c = np.linspace(-1.5, 1.5, n)
@@ -114,6 +114,7 @@ def marching_cubes(data, iso):
     nz, ny, nx = data.shape
     verts = []
     faces = []
+    e_dict = dict()
 
     for z in range(nz - 1):
         for y in range(ny - 1):
@@ -126,9 +127,25 @@ def marching_cubes(data, iso):
 
                 tris = cube_to_triangles(corners, EDGES, values, iso)
 
-                for tri in tris:
-                    i0 = len(verts)
-                    verts.extend(tri)
-                    faces.append((i0, i0 + 1, i0 + 2))
+                for tri, e_id in tris:
+                    idx3 = []
+                    for j in range(3):
+                        a, b = EDGES[e_id[j]]
+                        pa = (CORNERS[a][0] + x, CORNERS[a][1] + y, CORNERS[a][2] + z)
+                        pb = (CORNERS[b][0] + x, CORNERS[b][1] + y, CORNERS[b][2] + z)
+                        key = (min(pa, pb), max(pa, pb))
+
+                        if key in e_dict:
+                            idx3.append(e_dict[key])
+                        else:
+                            verts.append(tri[j])
+                            e_dict[key] = len(verts) - 1
+                            idx3.append(len(verts) - 1)
+                    faces.append(tuple(idx3))
+
+
+
+                    
 
     return verts, faces
+
