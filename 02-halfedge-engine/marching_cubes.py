@@ -107,10 +107,9 @@ def sphere_surface_field(n = 33):
     data = np.sqrt(dx**2 + dy**2 + dz**2) - 1.0
     iso = 0.0
 
-    return data, iso
+    return data, iso, c
 
-def marching_cubes(data, iso):
-    
+def marching_cubes(data, iso, c):
     nz, ny, nx = data.shape
     verts = []
     faces = []
@@ -123,7 +122,7 @@ def marching_cubes(data, iso):
                 corners = []
                 for (cx, cy, cz) in CORNERS:
                     values.append(data[z + cz, y + cy, x + cx])
-                    corners.append([x + cx, y + cy, z + cz])
+                    corners.append([c[x + cx], c[y + cy], c[z + cz]])
 
                 tris = cube_to_triangles(corners, EDGES, values, iso)
 

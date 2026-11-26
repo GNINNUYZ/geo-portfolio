@@ -5,6 +5,7 @@ from edge_flip import faces2idx, flip_cube
 import marching_cubes as mc
 import sys
 import mc_table
+import halfedge
 
 corner = [
     [0,0,0], [1,0,0], [1,1,0], [0,1,0],
@@ -77,6 +78,50 @@ def test_marching_cubes():
         if set(tris[0]) == set(want):
             passed += 1
 
+    data, iso, cspace = mc.sphere_surface_field()
+    vs, fs = mc.marching_cubes(data, iso, cspace)
+    
+    m = halfedge.Mesh()
+    m.build_from_arrays(np.array(vs), fs)
+
+    V = len(m.vertices)
+    E = len(m.halfedges) // 2
+    F = len(m.faces)
+
+    chi = V - E + F
+
+    total += 1
+    if chi == 2:
+        passed += 1
+    
+    total += 1
+    if len(m.boundary_edges()) == 0:
+        passed += 1
+
+    total += 1
+    valid_he = 0
+    for he in m.halfedges:
+        if he.twin.twin is he:
+            valid_he += 1
+    if valid_he == len(m.halfedges):
+        passed += 1
+
+    total += 1
+    valid_p = 0
+    for p in np.array((vs)):
+        if abs(np.linalg.norm(p) - 1) < 1e-2:
+            valid_p += 1
+    if valid_p == len(m.vertices):
+        passed += 1
+
+    total += 1
+    fs_area = 0
+    for f in fs:
+        f_area = 0.5 * np.linalg.norm(np.cross((vs[f[1]] - vs[f[0]]), (vs[f[2]] - vs[f[0]])))
+        fs_area += f_area
+
+    if abs(fs_area - (4*np.pi)) / (4*np.pi) <= 0.01:
+        passed += 1
 
     return passed, total
 
